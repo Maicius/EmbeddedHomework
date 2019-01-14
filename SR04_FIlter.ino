@@ -5,6 +5,8 @@
 #define DEFAULT_DELAY 10
 #define DEFAULT_PINGS 5
 SR04 sr04 = SR04(ECHO_PIN,TRIG_PIN);
+long raw_val;
+
 long median_val;
 int median = 0;
 long median_distance;
@@ -22,14 +24,22 @@ long median_avg_distance;
 long avg_distance_list[MAX_K];
 void setup() {
    Serial.begin(9600);
-   delay(1000);
+   delay(10);
 }
 
 void loop() {
+   raw_val = sr04.Distance();
    median_distance = median_filter(11);
    avg_distance = avg_filter();
-   avg_distance = median_avg_filter();
-   delay(1000);
+   median_avg_distance = median_avg_filter();
+   Serial.print(raw_val);
+   Serial.print(',');
+   Serial.print(median_distance);
+   Serial.print(',');
+   Serial.print(avg_distance);
+   Serial.print(',');
+   Serial.println(median_avg_distance);
+   delay(10);
 }
 
 
@@ -48,17 +58,13 @@ long median_filter(int k = 11) {
 //      Serial.print(" ");
 //    }
     median = k / 2;
-    Serial.print("中位值滤波：");
-    Serial.print(distance_list[median]);
-    Serial.println("cm");
+    format_output("中位值滤波：", distance_list[median]);
     return distance_list[median];
 }
 
 long avg_filter(int delay_time=DEFAULT_DELAY, int pings=DEFAULT_PINGS) {
     avg_val = sr04.DistanceAvg(delay_time, pings);
-    Serial.print("均值滤波：");
-    Serial.print(avg_val);
-    Serial.println("cm");
+    format_output("均值滤波：", avg_val);
     return avg_val;
 }
 
@@ -77,8 +83,12 @@ long median_avg_filter(int k = 11) {
       sum += avg_distance_list[i];
     }
     median_avg_val = int(sum / (k - 2));
-    Serial.print("中位值平均滤波：");
-    Serial.print(median_avg_val);
-    Serial.println("cm");
+
     return median_avg_val;
+}
+
+void format_output(const char* name, long val){
+  Serial.print(name);
+  Serial.print(val);
+  Serial.println("cm");
 }
